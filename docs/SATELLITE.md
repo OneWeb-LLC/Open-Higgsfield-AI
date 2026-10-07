@@ -13,7 +13,7 @@ This deployment is an OWeb constellation satellite. Identity, workspaces, and bi
 |------|--------|--------|
 | Native | `/login` | Email/password against shared Supabase Auth (`ao-supabase-auth` session key) |
 | OWeb return | `https://oweb.one/login?launch=open-higgsfield-ai` | App Store mints token → `/sso?launch_token=…` |
-| SSO redeem | `/sso` | Server redeem via `SUPABASE_SERVICE_ROLE_KEY`, then `setSession` |
+| SSO redeem | `/sso` | Satellite `POST /api/sso/redeem` → OWeb `POST /api/v1/ecosystem/redeem-launch-token`, then `setSession` |
 
 Post-auth (native or SSO): server resolves workspace context, calls OWeb activation APIs (with RPC fallback), upserts `ohf_profiles`.
 

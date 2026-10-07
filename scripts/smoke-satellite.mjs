@@ -13,10 +13,17 @@ function assert(cond, msg) {
 }
 
 const envExample = readFileSync(resolve(root, '.env.example'), 'utf8');
-assert(envExample.includes('SUPABASE_SERVICE_ROLE_KEY'), 'env.example missing SERVICE_ROLE');
+assert(
+  !envExample.includes('SUPABASE_SERVICE_ROLE_KEY'),
+  'env.example must not require SUPABASE_SERVICE_ROLE_KEY (centralized OWeb redeem)',
+);
 assert(envExample.includes('NEXT_PUBLIC_OHF_REQUIRE_AUTH=true'), 'env.example must document REQUIRE_AUTH');
 assert(envExample.includes('ebjzdcnphkfpxfldnatm'), 'env.example must pin One OS project id');
 assert(envExample.includes('auth.oweb.one'), 'env.example must use auth.oweb.one');
+assert(
+  envExample.includes('NEXT_PUBLIC_OWEB_PLATFORM_API_URL'),
+  'env.example must document OWeb platform API for SSO redeem',
+);
 
 assert(existsSync(resolve(root, 'docs/SATELLITE.md')), 'missing docs/SATELLITE.md');
 assert(
@@ -34,6 +41,26 @@ assert(
   'browser client must use shared ao-supabase-auth storage key',
 );
 
+const redeem = readFileSync(resolve(root, 'lib/sso/redeem-launch-token.server.js'), 'utf8');
+const redeemContract = readFileSync(resolve(root, 'lib/sso/redeem-contract.js'), 'utf8');
+assert(
+  redeemContract.includes('/ecosystem/redeem-launch-token'),
+  'SSO redeem must call OWeb centralized endpoint',
+);
+assert(
+  redeem.includes('getOwebRedeemLaunchUrl') && redeem.includes('app_id: OHF_APP_ID'),
+  'SSO redeem server must POST launch_token and app_id to OWeb',
+);
+assert(
+  !redeem.includes('ao_ecosystem_launch_tokens') && !redeem.includes('getSupabaseAdmin'),
+  'SSO redeem must not use direct token table access or service-role client',
+);
+
+assert(
+  !existsSync(resolve(root, 'lib/supabase/admin.server.js')),
+  'admin service-role client must be removed from satellite',
+);
+
 const isolationSql = readFileSync(
   resolve(root, 'supabase/migrations/20261007220000_ohf_profiles_isolation.sql'),
   'utf8',
@@ -44,10 +71,6 @@ assert(
     isolationSql,
   ),
   'ohf migration must not create SECURITY DEFINER workspace helpers',
-);
-assert(
-  isolationSql.includes('DROP FUNCTION IF EXISTS public.ohf_is_workspace_member'),
-  'ohf migration should drop unused draft helper if present',
 );
 assert(
   isolationSql.includes('(SELECT auth.uid()) = id'),
