@@ -38,6 +38,7 @@ export default async function StudioPage() {
     const ctx = await establishProductSession(supabase, user, {
       accessToken: session?.access_token ?? null,
       activationKind: 'sign_in',
+      persistCookie: false,
     });
     workspaceId = ctx.workspaceId;
     const handle =
