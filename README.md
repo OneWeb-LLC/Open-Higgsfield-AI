@@ -2,6 +2,12 @@
 
 > **The free, open-source alternative to Higgsfield AI.** Generate AI images and videos using 200+ state-of-the-art models — without the closed ecosystem or subscription fees.
 
+Licensed under the [MIT License](LICENSE) (Copyright (c) 2026 Open Generative AI Contributors). Upstream lineage: [Anil-matcha/Open-Higgsfield-AI](https://github.com/Anil-matcha/Open-Higgsfield-AI).
+
+### OWeb constellation (OneWeb-LLC)
+
+The Next.js deployment can run as an **OWeb satellite** (`app_id`: `open-higgsfield-ai`) with shared OneID login (`auth.oweb.one`), SSO return from [oweb.one](https://oweb.one), and workspace-scoped activation. See [docs/SATELLITE.md](docs/SATELLITE.md) and [ENV_AUDIT.md](ENV_AUDIT.md). Control-plane App Store registration lives in a separate OWeb PR.
+
 ## 🌐 Try it Online — No Install Required
 
 **Hosted version:** [muapi.ai/open-higgsfield-ai](https://muapi.ai/open-higgsfield-ai)
