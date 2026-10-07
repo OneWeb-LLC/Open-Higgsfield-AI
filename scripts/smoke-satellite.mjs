@@ -34,6 +34,20 @@ assert(
   'browser client must use shared ao-supabase-auth storage key',
 );
 
+const isolationSql = readFileSync(
+  resolve(root, 'supabase/migrations/20261007220000_ohf_profiles_isolation.sql'),
+  'utf8',
+);
+assert(isolationSql.includes('FORCE ROW LEVEL SECURITY'), 'ohf migration must FORCE RLS');
+assert(
+  !isolationSql.includes('ohf_is_workspace_member'),
+  'ohf migration must not define SECURITY DEFINER workspace helpers',
+);
+assert(
+  isolationSql.includes('(SELECT auth.uid()) = id'),
+  'ohf_profiles_self must compare auth.uid() to id',
+);
+
 if (failures.length) {
   console.error('smoke:satellite FAILED');
   for (const f of failures) console.error(' -', f);
