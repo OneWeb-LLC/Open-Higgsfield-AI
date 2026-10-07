@@ -2,7 +2,7 @@
 
 > **The free, open-source alternative to Higgsfield AI.** Generate AI images and videos using 200+ state-of-the-art models — without the closed ecosystem or subscription fees.
 
-Licensed under the [MIT License](LICENSE) (Copyright (c) 2026 Open Generative AI Contributors). Provenance: [OneWeb-LLC/Open-Higgsfield-AI](https://github.com/OneWeb-LLC/Open-Higgsfield-AI) is forked from [Autom8AI/Open-Higgsfield-AI](https://github.com/Autom8AI/Open-Higgsfield-AI), which forked from [Anil-matcha/Open-Generative-AI](https://github.com/Anil-matcha/Open-Generative-AI) (MIT on GitHub).
+Licensed under the [MIT License](LICENSE) (Copyright (c) 2026 Open Generative AI Contributors). Fork lineage: [Autom8AI/Open-Higgsfield-AI](https://github.com/Autom8AI/Open-Higgsfield-AI) → [Anil-matcha/Open-Generative-AI](https://github.com/Anil-matcha/Open-Generative-AI) (MIT on GitHub).
 
 ### OWeb constellation (OneWeb-LLC)
 

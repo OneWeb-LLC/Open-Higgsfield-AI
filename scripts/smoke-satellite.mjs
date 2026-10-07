@@ -40,8 +40,14 @@ const isolationSql = readFileSync(
 );
 assert(isolationSql.includes('FORCE ROW LEVEL SECURITY'), 'ohf migration must FORCE RLS');
 assert(
-  !isolationSql.includes('ohf_is_workspace_member'),
-  'ohf migration must not define SECURITY DEFINER workspace helpers',
+  !/CREATE\s+(OR\s+REPLACE\s+)?FUNCTION\s+public\.ohf_is_workspace_member/i.test(
+    isolationSql,
+  ),
+  'ohf migration must not create SECURITY DEFINER workspace helpers',
+);
+assert(
+  isolationSql.includes('DROP FUNCTION IF EXISTS public.ohf_is_workspace_member'),
+  'ohf migration should drop unused draft helper if present',
 );
 assert(
   isolationSql.includes('(SELECT auth.uid()) = id'),

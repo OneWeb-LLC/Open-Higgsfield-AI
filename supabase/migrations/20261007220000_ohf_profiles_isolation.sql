@@ -1,5 +1,8 @@
 -- Open Higgsfield AI satellite (app_id=open-higgsfield-ai) on shared One OS
--- Local profile projection: id = auth.users.id (no SECURITY DEFINER helpers).
+-- Local profile projection only: id = auth.users.id, self-only RLS (no ao_org_members helpers).
+
+-- Remove unused draft helper if a prior apply created it (never referenced by ohf_profiles policy).
+DROP FUNCTION IF EXISTS public.ohf_is_workspace_member(UUID);
 
 CREATE TABLE IF NOT EXISTS public.ohf_profiles (
   id UUID PRIMARY KEY REFERENCES auth.users (id) ON DELETE CASCADE,
