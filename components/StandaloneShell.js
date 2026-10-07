@@ -34,6 +34,23 @@ export default function StandaloneShell({
     if (stored) setApiKey(stored);
   }, [storageKey]);
 
+  useEffect(() => {
+    if (!userId) return;
+    const syncKey = 'ohf_workspace_cookie_sync';
+    if (sessionStorage.getItem(syncKey)) return;
+
+    void fetch('/api/auth/complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        activation_kind: 'sign_in',
+        ...(workspaceId ? { workspace_id: workspaceId } : {}),
+      }),
+    }).then((res) => {
+      if (res.ok) sessionStorage.setItem(syncKey, '1');
+    });
+  }, [userId, workspaceId]);
+
   const handleKeySave = useCallback(
     (key) => {
       localStorage.setItem(storageKey, key);
@@ -49,6 +66,7 @@ export default function StandaloneShell({
 
   const handleSignOut = useCallback(async () => {
     try {
+      sessionStorage.removeItem('ohf_workspace_cookie_sync');
       const supabase = createClient();
       await supabase.auth.signOut();
     } catch {
