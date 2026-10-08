@@ -44,10 +44,11 @@ export function AuthModal(onSuccess) {
     const input = modal.querySelector('#muapi-key-input');
     const btn = modal.querySelector('#save-key-btn');
 
-    btn.onclick = () => {
+    btn.onclick = async () => {
         const key = input.value.trim();
         if (key) {
-            localStorage.setItem('muapi_key', key);
+            const { saveClientSecret } = await import('../../lib/ohf/client-secret-storage.js');
+            await saveClientSecret('muapi_key', key);
             document.body.removeChild(overlay);
             if (onSuccess) onSuccess();
         } else {
