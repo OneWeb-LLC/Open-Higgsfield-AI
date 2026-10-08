@@ -1,17 +1,43 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import ApiProviderSelect from './ApiProviderSelect';
 
-export default function ApiKeyModal({ onSave }) {
+export default function ApiKeyModal({
+  onSave,
+  apiProviders = [],
+  defaultProviderId = 'muapi-proxy',
+}) {
+  const [providerId, setProviderId] = useState(defaultProviderId);
   const [key, setKey] = useState('');
   const [error, setError] = useState('');
+
+  const activeProvider = useMemo(
+    () => apiProviders.find((p) => p.id === providerId) ?? apiProviders[0],
+    [apiProviders, providerId],
+  );
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const trimmed = key.trim();
-    if (!trimmed) { setError('Please enter your API key'); return; }
-    onSave(trimmed);
+    if (!trimmed) {
+      setError('Please enter your API key');
+      return;
+    }
+    if (!activeProvider?.id) {
+      setError('Select a generative API');
+      return;
+    }
+    onSave({ apiKey: trimmed, providerId: activeProvider.id });
   };
+
+  const signupUrl = activeProvider?.signupUrl || 'https://muapi.ai';
+  let signupHost = 'muapi.ai';
+  try {
+    signupHost = new URL(signupUrl).hostname;
+  } catch {
+    /* keep default */
+  }
 
   return (
     <div className="min-h-screen bg-[#050505] flex items-center justify-center px-4">
@@ -26,19 +52,31 @@ export default function ApiKeyModal({ onSave }) {
             Open Higgsfield AI
           </h1>
           <p className="text-white/40 text-sm">
-            Enter your <a href="https://muapi.ai" target="_blank" rel="noreferrer" className="text-[#d9ff00] hover:underline">Muapi.ai</a> API key to start generating
+            Choose your generative API and enter your key to start creating.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <ApiProviderSelect
+            providers={apiProviders}
+            value={providerId}
+            onChange={(id) => {
+              setProviderId(id);
+              setError('');
+            }}
+          />
+
           <div>
             <label className="block text-xs font-bold text-white/40 uppercase tracking-widest mb-2">
-              Muapi API Key
+              {activeProvider?.keyHint || 'API key'}
             </label>
             <input
               type="password"
               value={key}
-              onChange={(e) => { setKey(e.target.value); setError(''); }}
+              onChange={(e) => {
+                setKey(e.target.value);
+                setError('');
+              }}
               placeholder="Enter your API key..."
               className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-[#d9ff00]/40 transition-colors"
               suppressHydrationWarning
@@ -56,8 +94,13 @@ export default function ApiKeyModal({ onSave }) {
 
           <p className="text-center text-xs text-white/30">
             Don&apos;t have a key?{' '}
-            <a href="https://muapi.ai" target="_blank" rel="noreferrer" className="text-[#d9ff00] hover:underline">
-              Get one free at Muapi.ai →
+            <a
+              href={signupUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[#d9ff00] hover:underline"
+            >
+              Get one at {signupHost} →
             </a>
           </p>
         </form>

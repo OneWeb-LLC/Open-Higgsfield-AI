@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import StandaloneShell from '@/components/StandaloneShell';
+import { getDefaultApiProviderId, getPublicApiProviders } from '@/lib/ohf/api-providers';
 import { isAuthRequired } from '@/lib/ohf/constants';
 import { formatOneId, fetchOneIdHandle, oneIdFromUserMetadata } from '@/lib/oneid';
 import { createClient } from '@/lib/supabase/server';
@@ -12,12 +13,16 @@ export const metadata = {
 };
 
 export default async function StudioPage() {
+  const apiProviders = getPublicApiProviders();
+  const defaultProviderId = getDefaultApiProviderId();
+  const shellProps = { apiProviders, defaultProviderId };
+
   let supabase;
   try {
     supabase = await createClient();
   } catch {
     if (isAuthRequired()) redirect('/login?next=/studio');
-    return <StandaloneShell />;
+    return <StandaloneShell {...shellProps} />;
   }
 
   const {
@@ -48,6 +53,7 @@ export default async function StudioPage() {
 
   return (
     <StandaloneShell
+      {...shellProps}
       userId={user?.id ?? null}
       userEmail={user?.email ?? null}
       oneId={oneIdLabel}

@@ -13,6 +13,7 @@
     "lint": "next lint",
     "test": "node --test tests/*.test.mjs",
     "smoke:satellite": "node scripts/smoke-satellite.mjs",
+    "sync:vercel-env": "node scripts/sync-vercel-env-from-oweb.mjs",
     "build:studio": "cd packages/studio && npm run build",
     "setup": "npm install && npm run build:studio",
     "vite:dev": "vite",
@@ -50,6 +51,7 @@
     "react-hot-toast": "^2.4.1"
   },
   "devDependencies": {
+    "@vercel/sdk": "^1.10.0",
     "@eslint/eslintrc": "^3",
     "autoprefixer": "^10.4.24",
     "electron": "^33.4.11",

@@ -1,22 +1,42 @@
 import { getModelById, getVideoModelById, getI2IModelById, getI2VModelById, getV2VModelById, getLipSyncModelById } from './models.js';
 
-/** Avoid browser CORS: Vite dev proxies `/api`; Next.js uses `/api/muapi`. */
+/** @typedef {{ mode?: 'proxy' | 'direct', proxyPath?: string, directUpstream?: string }} GenerativeClientConfig */
+
+/** @type {GenerativeClientConfig} */
+let clientConfig = {
+    mode: 'proxy',
+    proxyPath: '/api/muapi',
+    directUpstream: 'https://api.muapi.ai',
+};
+
+/**
+ * Configure how studio routes generative API calls (set from Open Higgsfield shell).
+ * @param {GenerativeClientConfig} config
+ */
+export function configureGenerativeClient(config) {
+    clientConfig = { ...clientConfig, ...config };
+}
+
+/** Avoid browser CORS: Vite dev proxies `/api`; Next.js uses configurable proxy path. */
 function getBaseUrl() {
     if (typeof window === 'undefined') {
-        return 'https://api.muapi.ai';
+        return clientConfig.directUpstream || 'https://api.muapi.ai';
+    }
+    if (clientConfig.mode === 'direct') {
+        return (clientConfig.directUpstream || 'https://api.muapi.ai').replace(/\/$/, '');
     }
     try {
         if (import.meta.env?.DEV) {
-            return '/api';
+            return clientConfig.proxyPath || '/api';
         }
     } catch {
         /* not a Vite bundle */
     }
     const protocol = window.location?.protocol ?? '';
     if (protocol === 'http:' || protocol === 'https:') {
-        return '/api/muapi';
+        return clientConfig.proxyPath || '/api/muapi';
     }
-    return 'https://api.muapi.ai';
+    return (clientConfig.directUpstream || 'https://api.muapi.ai').replace(/\/$/, '');
 }
 
 async function pollForResult(requestId, key, maxAttempts = 900, interval = 2000) {
