@@ -1,9 +1,26 @@
 import { getModelById, getVideoModelById, getI2IModelById, getI2VModelById, getV2VModelById, getLipSyncModelById } from './models.js';
 
-const BASE_URL = 'https://api.muapi.ai';
+/** Avoid browser CORS: Vite dev proxies `/api`; Next.js uses `/api/muapi`. */
+function getBaseUrl() {
+    if (typeof window === 'undefined') {
+        return 'https://api.muapi.ai';
+    }
+    try {
+        if (import.meta.env?.DEV) {
+            return '/api';
+        }
+    } catch {
+        /* not a Vite bundle */
+    }
+    const protocol = window.location?.protocol ?? '';
+    if (protocol === 'http:' || protocol === 'https:') {
+        return '/api/muapi';
+    }
+    return 'https://api.muapi.ai';
+}
 
 async function pollForResult(requestId, key, maxAttempts = 900, interval = 2000) {
-    const pollUrl = `${BASE_URL}/api/v1/predictions/${requestId}/result`;
+    const pollUrl = `${getBaseUrl()}/api/v1/predictions/${requestId}/result`;
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         await new Promise(resolve => setTimeout(resolve, interval));
         try {
@@ -27,7 +44,7 @@ async function pollForResult(requestId, key, maxAttempts = 900, interval = 2000)
 }
 
 async function submitAndPoll(endpoint, payload, key, onRequestId, maxAttempts = 60) {
-    const url = `${BASE_URL}/api/v1/${endpoint}`;
+    const url = `${getBaseUrl()}/api/v1/${endpoint}`;
     const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': key },
@@ -123,7 +140,7 @@ export async function processLipSync(apiKey, params) {
 
 export function uploadFile(apiKey, file, onProgress) {
     return new Promise((resolve, reject) => {
-        const url = `${BASE_URL}/api/v1/upload_file`;
+        const url = `${getBaseUrl()}/api/v1/upload_file`;
         const formData = new FormData();
         formData.append('file', file);
 
