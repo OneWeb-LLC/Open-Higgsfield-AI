@@ -8,6 +8,11 @@ import ApiProviderSelect from './ApiProviderSelect';
 import { createClient } from '@/lib/supabase/client';
 import { muapiStorageKey, apiProviderStorageKey } from '@/lib/ohf/constants';
 import { applyGenerativeProvider } from '@/lib/ohf/apply-generative-provider';
+import {
+  loadClientSecret,
+  removeClientSecret,
+  saveClientSecret,
+} from '@/lib/ohf/client-secret-storage';
 
 const TABS = [
   { id: 'image', label: 'Image Studio' },
@@ -50,13 +55,15 @@ export default function StandaloneShell({
 
   useEffect(() => {
     setHasMounted(true);
-    const storedKey = localStorage.getItem(storageKey);
-    const storedProvider =
-      localStorage.getItem(providerStorageKey) ||
-      defaultProviderId ||
-      apiProviders[0]?.id;
-    if (storedProvider) setProviderId(storedProvider);
-    if (storedKey) setApiKey(storedKey);
+    void (async () => {
+      const storedKey = await loadClientSecret(storageKey);
+      const storedProvider =
+        localStorage.getItem(providerStorageKey) ||
+        defaultProviderId ||
+        apiProviders[0]?.id;
+      if (storedProvider) setProviderId(storedProvider);
+      if (storedKey) setApiKey(storedKey);
+    })();
   }, [storageKey, providerStorageKey, defaultProviderId, apiProviders]);
 
   useEffect(() => {
@@ -83,7 +90,7 @@ export default function StandaloneShell({
 
   const handleSave = useCallback(
     ({ apiKey: key, providerId: nextProviderId }) => {
-      localStorage.setItem(storageKey, key);
+      void saveClientSecret(storageKey, key);
       localStorage.setItem(providerStorageKey, nextProviderId);
       setApiKey(key);
       setProviderId(nextProviderId);
@@ -102,7 +109,7 @@ export default function StandaloneShell({
   );
 
   const handleKeyChange = useCallback(() => {
-    localStorage.removeItem(storageKey);
+    void removeClientSecret(storageKey);
     setApiKey(null);
   }, [storageKey]);
 

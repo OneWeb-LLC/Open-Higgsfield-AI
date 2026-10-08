@@ -58,10 +58,11 @@ export function SettingsModal(onClose) {
     saveBtn.style.color = 'black';
     saveBtn.style.fontWeight = '500';
 
-    saveBtn.onclick = () => {
+    saveBtn.onclick = async () => {
         const key = input.value.trim();
         if (key) {
-            localStorage.setItem('muapi_key', key);
+            const { saveClientSecret } = await import('../../lib/ohf/client-secret-storage.js');
+            await saveClientSecret('muapi_key', key);
             alert('API Key saved!');
             document.body.removeChild(overlay);
             if (onClose) onClose();

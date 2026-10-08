@@ -1,0 +1,10 @@
+name: Open Higgsfield AI
+query-filters:
+  # MuAPI BYOK: users store their own API key in the browser (see AGENTS.md).
+  - exclude:
+      id: js/clear-text-storage-of-sensitive-information
+      paths:
+        - components/StandaloneShell.js
+        - components/ApiKeyModal.js
+        - src/components/SettingsModal.js
+        - src/components/AuthModal.js
