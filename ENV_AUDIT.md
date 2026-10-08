@@ -21,6 +21,19 @@
 | `NEXT_PUBLIC_OHF_REQUIRE_AUTH` | `true` in production (middleware protects `/studio`) |
 | `SUPABASE_URL` | Server alias for URL (optional if `NEXT_PUBLIC_*` set) |
 
+## Generative API providers (studio UI)
+
+| Variable | Client | Purpose |
+|----------|--------|---------|
+| `MUAPI_UPSTREAM` | no | Upstream for `/api/muapi` proxy (default `https://api.muapi.ai`) |
+| `OHF_OWEB_BACKEND_API_UPSTREAM` | no | Optional OWeb `BACKEND_API_URL` mirror → **OWeb backend API** in UI |
+| `NEXT_PUBLIC_OHF_DEFAULT_API_PROVIDER` | yes | Default selection (`muapi-proxy`, `muapi-direct`, …) |
+| `NEXT_PUBLIC_OHF_OWEB_BACKEND_LABEL` | yes | Label for OWeb backend provider |
+| `OHF_CUSTOM_API_UPSTREAM` | no | Optional third upstream |
+| `NEXT_PUBLIC_OHF_CUSTOM_API_LABEL` | yes | Label for custom provider |
+
+Sync Supabase/OWeb public env from the **oweb** Vercel project: `VERCEL_TOKEN=… npm run sync:vercel-env` (never copies service role).
+
 ## Explicitly not used
 
 - **No `SUPABASE_SERVICE_ROLE_KEY`** — SSO launch tokens are redeemed via OWeb `POST /api/v1/ecosystem/redeem-launch-token` (satellite server calls OWeb; OWeb uses service role centrally).

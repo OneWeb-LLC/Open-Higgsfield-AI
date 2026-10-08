@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { ImageStudio, VideoStudio, LipSyncStudio, CinemaStudio } from 'studio';
 import ApiKeyModal from './ApiKeyModal';
+import ApiProviderSelect from './ApiProviderSelect';
 import { createClient } from '@/lib/supabase/client';
-import { muapiStorageKey } from '@/lib/ohf/constants';
+import { muapiStorageKey, apiProviderStorageKey } from '@/lib/ohf/constants';
+import { applyGenerativeProvider } from '@/lib/ohf/apply-generative-provider';
 
 const TABS = [
   { id: 'image', label: 'Image Studio' },
@@ -19,20 +21,48 @@ export default function StandaloneShell({
   userEmail = null,
   oneId = null,
   workspaceId = null,
+  apiProviders = [],
+  defaultProviderId = 'muapi-proxy',
 }) {
   const router = useRouter();
   const storageKey = userId ? muapiStorageKey(userId) : 'muapi_key';
+  const providerStorageKey = apiProviderStorageKey(userId);
+
+  const providerById = useMemo(() => {
+    const map = new Map();
+    for (const p of apiProviders) map.set(p.id, p);
+    return map;
+  }, [apiProviders]);
 
   const [apiKey, setApiKey] = useState(null);
+  const [providerId, setProviderId] = useState(defaultProviderId);
   const [activeTab, setActiveTab] = useState('image');
   const [showSettings, setShowSettings] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
 
+  const syncClientForProvider = useCallback(
+    (id) => {
+      const provider = providerById.get(id);
+      if (provider) applyGenerativeProvider(provider);
+    },
+    [providerById],
+  );
+
   useEffect(() => {
     setHasMounted(true);
-    const stored = localStorage.getItem(storageKey);
-    if (stored) setApiKey(stored);
-  }, [storageKey]);
+    const storedKey = localStorage.getItem(storageKey);
+    const storedProvider =
+      localStorage.getItem(providerStorageKey) ||
+      defaultProviderId ||
+      apiProviders[0]?.id;
+    if (storedProvider) setProviderId(storedProvider);
+    if (storedKey) setApiKey(storedKey);
+  }, [storageKey, providerStorageKey, defaultProviderId, apiProviders]);
+
+  useEffect(() => {
+    if (!providerId) return;
+    syncClientForProvider(providerId);
+  }, [providerId, syncClientForProvider]);
 
   useEffect(() => {
     if (!userId) return;
@@ -51,12 +81,24 @@ export default function StandaloneShell({
     });
   }, [userId, workspaceId]);
 
-  const handleKeySave = useCallback(
-    (key) => {
+  const handleSave = useCallback(
+    ({ apiKey: key, providerId: nextProviderId }) => {
       localStorage.setItem(storageKey, key);
+      localStorage.setItem(providerStorageKey, nextProviderId);
       setApiKey(key);
+      setProviderId(nextProviderId);
+      syncClientForProvider(nextProviderId);
     },
-    [storageKey],
+    [storageKey, providerStorageKey, syncClientForProvider],
+  );
+
+  const handleProviderChange = useCallback(
+    (nextProviderId) => {
+      localStorage.setItem(providerStorageKey, nextProviderId);
+      setProviderId(nextProviderId);
+      syncClientForProvider(nextProviderId);
+    },
+    [providerStorageKey, syncClientForProvider],
   );
 
   const handleKeyChange = useCallback(() => {
@@ -76,6 +118,8 @@ export default function StandaloneShell({
     router.refresh();
   }, [router]);
 
+  const activeProvider = providerById.get(providerId);
+
   if (!hasMounted) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
@@ -85,7 +129,13 @@ export default function StandaloneShell({
   }
 
   if (!apiKey) {
-    return <ApiKeyModal onSave={handleKeySave} />;
+    return (
+      <ApiKeyModal
+        onSave={handleSave}
+        apiProviders={apiProviders}
+        defaultProviderId={providerId || defaultProviderId}
+      />
+    );
   }
 
   return (
@@ -101,6 +151,11 @@ export default function StandaloneShell({
               {workspaceId ? ` · ws ${workspaceId.slice(0, 8)}…` : null}
             </span>
           )}
+          {activeProvider ? (
+            <span className="text-[10px] text-[#d9ff00]/70 font-mono truncate max-w-[240px]">
+              API: {activeProvider.label}
+            </span>
+          ) : null}
         </div>
 
         <nav className="flex items-center gap-1">
@@ -147,14 +202,24 @@ export default function StandaloneShell({
 
       {showSettings && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-          <div className="bg-[#111] border border-white/10 rounded-2xl p-8 w-full max-w-md">
-            <h2 className="text-white font-bold text-xl mb-6">Settings</h2>
-            <p className="text-white/50 text-sm mb-2">
-              MuAPI key (BYOK, stored in this browser only for your OneID):
-            </p>
-            <p className="text-white/80 font-mono text-sm mb-4">
-              {apiKey.slice(0, 8)}••••••••
-            </p>
+          <div className="bg-[#111] border border-white/10 rounded-2xl p-8 w-full max-w-md space-y-6">
+            <h2 className="text-white font-bold text-xl">Settings</h2>
+
+            <ApiProviderSelect
+              providers={apiProviders}
+              value={providerId}
+              onChange={handleProviderChange}
+            />
+
+            <div>
+              <p className="text-white/50 text-sm mb-2">
+                API key (BYOK, stored in this browser only for your OneID):
+              </p>
+              <p className="text-white/80 font-mono text-sm mb-4">
+                {apiKey.slice(0, 8)}••••••••
+              </p>
+            </div>
+
             <div className="flex gap-3">
               <button
                 onClick={handleKeyChange}
